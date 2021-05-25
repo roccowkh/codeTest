@@ -69,6 +69,7 @@ class CurrencyController extends Controller
      */
     public function index()
     {   
+
         $yesterday = date("Y-m");
         $day = date("d")-1;
         $yesterday = "$yesterday-$day";
@@ -81,7 +82,13 @@ class CurrencyController extends Controller
     }
 
     function getDailyValueFromDB($date) {
-        $rates = DailyRate::all();
+
+        $rateObj = DailyRate::where('date', $date)->first();
+        if ($rateObj == false) {
+            return $this->getAndStoreDailyRate($date);
+        } else {
+            return $rateObj['rate'];
+        }
         if (count($rates) == 0 ) {
             return $this->getAndStoreDailyRate($date);
         }

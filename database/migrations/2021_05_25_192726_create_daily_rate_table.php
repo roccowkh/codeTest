@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateDailyRates extends Migration
+class CreateDailyRateTable extends Migration
 {
     /**
      * Run the migrations.
@@ -15,7 +15,7 @@ class CreateDailyRates extends Migration
     {
         Schema::create('daily_rates', function (Blueprint $table) {
             $table->id();
-            $table->float('rate');
+            $table->double('rate');
             $table->string('date');
             $table->timestamps();
         });
@@ -28,6 +28,6 @@ class CreateDailyRates extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('daily_rates');
+        Schema::dropIfExists('daily_rate');
     }
 }
