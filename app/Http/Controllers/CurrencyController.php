@@ -26,15 +26,6 @@ class CurrencyController extends Controller
         return $val;
     }
 
-    function getYesterdayRate() {
-        $apikey = 'c93c85d0e6059bcb08af';
-        $date = date("Y-m-");
-        $day = date("d")-1;
-        $json = file_get_contents("https://free.currconv.com/api/v7/convert?q=USD_HKD&compact=ultra&date=$date$day&apiKey=c93c85d0e6059bcb08af");
-        $obj = json_decode($json, true);
-        return $obj["USD_HKD"]["$date$day"];
-    }
-
     function convertCurrency(Request $req){
         $from_currency = "USD";
         $to_currency = "HKD";
@@ -52,7 +43,10 @@ class CurrencyController extends Controller
 
         $total = $val * $amount;
         $rate = $this->getCurrentRate();
-        $yesterdayRate = $this->getYesterdayRate();
+        $yesterday = date("Y-m");
+        $day = date("d")-1;
+        $yesterday = "$yesterday-$day";
+        $yesterdayRate = $this->getDailyValueFromDB($yesterday);
         $percent = $this->getPercentageDifference($rate, $yesterdayRate);
         return view('test', ['rate' => $rate, 'yesterdayRate' => $yesterdayRate, 'percent' => $percent, 'value' => (number_format($total, 2, '.', '')), 'usd' => $amount]);
     }
@@ -88,6 +82,9 @@ class CurrencyController extends Controller
 
     function getDailyValueFromDB($date) {
         $rates = DailyRate::all();
+        if (count($rates) == 0 ) {
+            return $this->getAndStoreDailyRate($date);
+        }
         foreach($rates as $rate) {
             if (strpos($rate["date"], $date) !== false ){
                 return $rate["rate"];
@@ -98,7 +95,7 @@ class CurrencyController extends Controller
     }
 
     function getAndStoreDailyRate($date) {
-        $apikey = 'c93c85d0e6059bcb08af';
+        $apikey = env('FREE_API_KEY');
         $json = file_get_contents("https://free.currconv.com/api/v7/convert?q=USD_HKD&compact=ultra&date=$date&apiKey=c93c85d0e6059bcb08af");
         $obj = json_decode($json, true);
         $result = $obj["USD_HKD"]["$date"];
