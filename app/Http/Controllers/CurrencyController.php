@@ -51,7 +51,6 @@ class CurrencyController extends Controller
         $amount = $req->input('usd');
 
         $total = $val * $amount;
-        $this->storeRecord($amount, $val);
         $rate = $this->getCurrentRate();
         $yesterdayRate = $this->getYesterdayRate();
         $percent = $this->getPercentageDifference($rate, $yesterdayRate);
@@ -62,12 +61,12 @@ class CurrencyController extends Controller
         return (($rateTdy-$rateYtd)/$rateYtd)*100;
     }
 
-    function storeRecord($amount, $rate) {
+   /* function storeRecord($amount, $rate) {
         $record = new Currency;
         $record->rate = $rate;
         $record->convertedAmount = $amount;
         //$record->save();
-    }
+    }*/
 
     /**
      * Display a listing of the resource.
@@ -75,17 +74,39 @@ class CurrencyController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {
-        $rate = $this->getCurrentRate();
-        $yesterdayRate = $this->getYesterdayRate();
+    {   
+        $yesterday = date("Y-m");
+        $day = date("d")-1;
+        $yesterday = "$yesterday-$day";
+        $today = date("Y-m-d");
+        $rate = $this->getDailyValueFromDB($today);
+        $yesterdayRate = $this->getDailyValueFromDB($yesterday);
         $percent = $this->getPercentageDifference($rate, $yesterdayRate);
         return view('home', ['rate' => $rate, 'yesterdayRate' => $yesterdayRate, 'percent' => $percent]);
-        //return $this->getPercentageDifference($rate, $yesterdayRate);
-        //return $yesterdayRate;
+        
     }
 
-    function getAndStoreRate() {
+    function getDailyValueFromDB($date) {
+        $rates = DailyRate::all();
+        foreach($rates as $rate) {
+            if (strpos($rate["date"], $date) !== false ){
+                return $rate["rate"];
+            } else {
+                return $this->getAndStoreDailyRate($date);
+            }
+        }
+    }
 
+    function getAndStoreDailyRate($date) {
+        $apikey = 'c93c85d0e6059bcb08af';
+        $json = file_get_contents("https://free.currconv.com/api/v7/convert?q=USD_HKD&compact=ultra&date=$date&apiKey=c93c85d0e6059bcb08af");
+        $obj = json_decode($json, true);
+        $result = $obj["USD_HKD"]["$date"];
+        $dailyRate = new DailyRate;
+        $dailyRate->rate =  $result;
+        $dailyRate->date = $date;
+        $dailyRate->save();
+        return $result;
     }
 
     /**
