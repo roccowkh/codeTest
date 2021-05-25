@@ -13,23 +13,9 @@ use App\Http\Controllers\CurrencyController;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/codeTest', function () {
-    return 'code test';
-});
-
+Route::resource('/', 'App\Http\Controllers\CurrencyController');
 Route::get('/test', function () {
     return view('test', ['value' => '']);
-});
-
-Route::post('/test', [PostController::class, 'convertCurrency']);
-
-Route::get('/form', function () {
-	return view('form');
 });
 
 Route::resource('record', 'App\Http\Controllers\CurrencyController');

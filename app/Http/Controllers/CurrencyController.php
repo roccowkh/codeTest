@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Currency;
 
 class CurrencyController extends Controller
 {
@@ -50,7 +51,7 @@ class CurrencyController extends Controller
         $amount = $req->input('usd');
 
         $total = $val * $amount;
-   
+        $this->storeRecord($amount, $val);
         $rate = $this->getCurrentRate();
         $yesterdayRate = $this->getYesterdayRate();
         $percent = $this->getPercentageDifference($rate, $yesterdayRate);
@@ -60,6 +61,14 @@ class CurrencyController extends Controller
     function getPercentageDifference($rateTdy, $rateYtd) {
         return (($rateTdy-$rateYtd)/$rateYtd)*100;
     }
+
+    function storeRecord($amount, $rate) {
+        $record = new Currency;
+        $record->rate = $rate;
+        $record->convertedAmount = $amount;
+        $record->save();
+    }
+
     /**
      * Display a listing of the resource.
      *
